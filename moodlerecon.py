@@ -1481,9 +1481,7 @@ def scan(args):
             findings.append(finding)
         if args.cookies:
             authenticated = new_audit_client(args)
-            jar = MozillaCookieJar(args.cookies)
-            jar.load(ignore_discard=True, ignore_expires=False)
-            authenticated.session.cookies.update(jar)
+            authenticated.session.cookies.update(args.cookie_jar)
             records, finding = enumerate_users(authenticated, base, args, "cookies_proporcionadas")
             user_records.extend(records)
             findings.append(finding)
@@ -1590,6 +1588,13 @@ def main():
         p.error("--version requiere X.Y.Z estable")
     if args.url and (urlparse(args.url).scheme not in ("http", "https") or not urlparse(args.url).netloc):
         p.error("--url requiere URL HTTP(S) absoluta")
+    args.cookie_jar = None
+    if args.cookies:
+        args.cookie_jar = MozillaCookieJar(os.path.expanduser(args.cookies))
+        try:
+            args.cookie_jar.load(ignore_discard=True, ignore_expires=False)
+        except (OSError, ValueError) as error:
+            p.error(f"No se pudo cargar --cookies {args.cookies!r}: {error}. Usa un archivo existente en formato Netscape o elimina --cookies y --check-learning-plans.")
     if args.update:
         client = HttpClient(timeout=20, proxy=args.proxy,
                             verify=not args.insecure, verbose=args.verbose)

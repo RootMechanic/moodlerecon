@@ -148,7 +148,7 @@ La prueba de invitado usa una sesión independiente y comprueba que el estado de
 
 ### Sesión proporcionada por el auditor
 
-Puedes usar un archivo de cookies en formato Netscape para consultar lo que permite una sesión autorizada:
+Puedes usar un archivo de cookies en formato Netscape para consultar lo que permite una sesión autorizada. Debes exportarlo previamente desde esa sesión; el scanner no crea `cookies.txt`. Una ruta relativa se resuelve desde el directorio donde ejecutas el comando. El archivo se valida antes de iniciar las peticiones:
 
 ```bash
 python moodlerecon.py --url https://moodle.example.com --enum-users --cookies cookies.txt

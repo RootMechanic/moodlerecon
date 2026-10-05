@@ -1,6 +1,10 @@
 """Regresiones locales: no contactan objetivos ni servicios externos."""
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
+import contextlib
+import io
+import tempfile
+from pathlib import Path
 import moodlerecon as scanner
 
 
@@ -36,6 +40,27 @@ class RegressionTests(unittest.TestCase):
 
     def test_source_url_redacts_tokens(self):
         self.assertEqual(scanner.safe_source("https://moodle.example/user/profile.php?id=4&token=secret#secret"), "https://moodle.example/user/profile.php?id=4")
+
+    def test_invalid_cookie_file_fails_before_scan(self):
+        with tempfile.TemporaryDirectory() as directory:
+            missing = Path(directory) / "missing.txt"
+            malformed = Path(directory) / "invalid.txt"
+            malformed.write_text("not a Netscape cookie file", encoding="utf-8")
+            for filename in (missing, malformed):
+                with self.subTest(filename=filename), patch("sys.argv", ["moodlerecon.py", "--url", "https://moodle.example", "--enum-users", "--cookies", str(filename)]), patch.object(scanner, "scan") as scan, contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()) as error:
+                    with self.assertRaises(SystemExit) as caught:
+                        scanner.main()
+                    self.assertEqual(caught.exception.code, 2)
+                    scan.assert_not_called()
+                    self.assertIn("No se pudo cargar --cookies", error.getvalue())
+
+    def test_valid_cookie_file_is_loaded_before_scan(self):
+        with tempfile.TemporaryDirectory() as directory:
+            filename = Path(directory) / "cookies.txt"
+            filename.write_text("# Netscape HTTP Cookie File\n.example.com\tTRUE\t/\tTRUE\t\tMoodleSession\ttest-value\n", encoding="utf-8")
+            with patch("sys.argv", ["moodlerecon.py", "--url", "https://moodle.example", "--enum-users", "--cookies", str(filename)]), patch.object(scanner, "scan") as scan, contextlib.redirect_stdout(io.StringIO()):
+                scanner.main()
+            self.assertEqual(len(scan.call_args.args[0].cookie_jar), 1)
 
 
 if __name__ == "__main__":
