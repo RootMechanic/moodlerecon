@@ -1,0 +1,32 @@
+# Entornos y archivos generados por Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Bases de datos descargadas y resultados de auditorias
+.moodlerecon/
+reports/
+informe*.json
+report*.json
+*.log
+
+# Credenciales y datos locales
+.env
+.env.*
+!.env.example
+cookies*.txt
+candidatos*.txt
+tokens*.txt
+
+# Editores y sistema operativo
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,3 @@
+# Soporte opcional para vectores CVSS 4.
+-r requirements.txt
+cvss>=3.4,<4
